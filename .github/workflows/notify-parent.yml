@@ -1,17 +1,20 @@
-name: Trigger Parent Pipeline
+name: Notify Parent CI
 
 on:
   push:
-    branches: [ "main" ]   # or on new repo creation event
+    branches: [ "main" ]
 
 jobs:
   notify:
     runs-on: ubuntu-latest
     steps:
-    - name: Call Parent Workflow
-      run: |
-        curl -X POST \
-        -H "Accept: application/vnd.github+json" \
-        -H "Authorization: token ${{ secrets.PAT_TOKEN }}" \
-        https://api.github.com/repos/<ORG>/<PARENT_REPO>/dispatches \
-        -d '{"event_type":"trigger-build","client_payload":{"repo":"<ORG>/<CHILD_REPO>"}}'
+      - name: Trigger parent CI pipeline
+        run: |
+          repo="$GITHUB_REPOSITORY"
+          echo "Sending build request for $repo"
+
+          curl -X POST \
+            -H "Accept: application/vnd.github+json" \
+            -H "Authorization: token ${{ secrets.PAT_TOKEN }}" \
+            https://api.github.com/repos/bighnesh021/parent-ci-cd/dispatches \
+            -d "{\"event_type\": \"trigger-build\", \"client_payload\": {\"repo\": \"$repo\"}}"
