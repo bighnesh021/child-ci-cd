@@ -1,20 +1,53 @@
-name: Notify Parent CI
+name: Trigger Parent CI with Deployment Params
 
 on:
-  push:
-    branches: [ "main" ]
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: "Mule Environment"
+        required: true
+        default: "Sandbox"
+
+      targetName:
+        description: "CloudHub Target"
+        required: true
+        default: "Cloudhub-US-East-2"
+
+      appName:
+        description: "Application Name"
+        required: true
+        default: "auth-dev"
+
+      replicas:
+        description: "Replicas"
+        required: true
+        default: "1"
+
+      vCores:
+        description: "Vcores"
+        required: true
+        default: "0.1"
 
 jobs:
   notify:
     runs-on: ubuntu-latest
     steps:
-      - name: Trigger parent CI pipeline
-        run: |
-          repo="$GITHUB_REPOSITORY"
-          echo "Sending build request for $repo"
+    - name: Trigger parent pipeline
+      run: |
+        repo="$GITHUB_REPOSITORY"
 
-          curl -X POST \
-            -H "Accept: application/vnd.github+json" \
-            -H "Authorization: token ${{ secrets.PAT_TOKEN }}" \
-            https://api.github.com/repos/bighnesh021/parent-ci-cd/dispatches \
-            -d "{\"event_type\": \"trigger-build\", \"client_payload\": {\"repo\": \"$repo\"}}"
+        curl -X POST \
+          -H "Accept: application/vnd.github+json" \
+          -H "Authorization: token ${{ secrets.PAT_TOKEN }}" \
+          https://api.github.com/repos/bighnesh021/parent-ci-cd/dispatches \
+          -d '{
+            "event_type": "trigger-build",
+            "client_payload": {
+              "repo": "'$repo'",
+              "environment": "${{ github.event.inputs.environment }}",
+              "targetName": "${{ github.event.inputs.targetName }}",
+              "appName": "${{ github.event.inputs.appName }}",
+              "replicas": "${{ github.event.inputs.replicas }}",
+              "vCores": "${{ github.event.inputs.vCores }}"
+            }
+          }'
